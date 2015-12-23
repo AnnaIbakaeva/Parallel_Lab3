@@ -2,6 +2,8 @@
 #include <mpi.h>
 #include <math.h> 
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -16,11 +18,12 @@ int** initMatrix(int n)
 
 int** fillInMatrix(int** a, int n)
 {
+	srand(time(NULL));
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			a[i][j] = i;
+			a[i][j] = rand() % 100;
 		}
 	}
 	return a;
@@ -145,12 +148,14 @@ int main(int argc, char* argv[])
 	if (rank == 0)
 	{
 		t2 = MPI_Wtime();
-		/*cout << "\nResult vector:\n";
-		for (int i = 0; i < matrixSize; i++)
+		if (matrixSize <= 100)
 		{
-			cout << resultVector[i] << " ";
-		}*/
-
+			cout << "\nResult vector:\n";
+			for (int i = 0; i < matrixSize; i++)
+			{
+				cout << resultVector[i] << " ";
+			}
+		}
 		cout << "\nTime: " << (t2 - t1);
 	}
 
