@@ -17,13 +17,12 @@ int** initMatrix(int n)
 }
 
 int** fillInMatrix(int** a, int n)
-{
-	srand(time(NULL));
+{	
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			a[i][j] = rand() % 100;
+			a[i][j] = i;// rand() % 100;
 		}
 	}
 	return a;
@@ -32,7 +31,7 @@ int** fillInMatrix(int** a, int n)
 int* fillVector(int * vector, int n)
 {
 	for (int i = 0; i < n; i++)
-		vector[i] = 1;
+		vector[i] = 1;// rand() % 100;
 	return vector;
 }
 
@@ -58,8 +57,25 @@ int main(int argc, char* argv[])
 
 	if (rank == 0)
 	{
+		srand(time(NULL));
 		A = fillInMatrix(A, matrixSize);
 		vector = fillVector(vector, matrixSize);
+		if (matrixSize <= 20)
+		{
+			cout << "Matrix:\n";
+			for (int i = 0; i < matrixSize; i++)
+			{
+				for (int j = 0; j < matrixSize; j++)
+					cout << A[i][j] << " ";
+				cout << "\n";
+			}
+			cout << "\nVector:\n";
+			for (int i = 0; i < matrixSize; i++)
+			{
+				cout << vector[i]<<" ";
+			}
+			cout << "\n";
+		}
 	}
 	MPI_Bcast(vector, matrixSize, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -70,12 +86,7 @@ int main(int argc, char* argv[])
 	if (rank == 0)
 	{
 		t1 = MPI_Wtime();
-		//cout << "\nrowAmount: " << rowAmount << "\n";
-		//cout << "\nresidue: " << residue << "\n";
-	}
 
-	if (rank == 0)
-	{
 		//0 поток вычисляет первую часть вектора
 		for (int i = 0; i < rowAmount; i++)
 		{
@@ -102,8 +113,19 @@ int main(int argc, char* argv[])
 					row[j + l*matrixSize] = A[m*rowAmount + l + r][j];
 				}
 			}
-			MPI_Send(row, matrixSize*amount, MPI_INT, m, m, MPI_COMM_WORLD);			
+			MPI_Send(row, matrixSize*amount, MPI_INT, m, m, MPI_COMM_WORLD);	
+			
+			if (amount > rowAmount)
+				r++;
+		}
 
+		for (int m = 1; m < size; m++)
+		{
+			int amount = rowAmount;
+			if (residue > 0 && size - m <= residue)
+			{
+				amount++;
+			}
 			//принимает от других потоков вычисленные элементы вектора
 			MPI_Status status;
 			int * resultElems = new int[amount];
@@ -113,8 +135,6 @@ int main(int argc, char* argv[])
 			{
 				resultVector[m*rowAmount + j + r] = resultElems[j];
 			}
-			if (amount > rowAmount)
-				r++;
 		}
 	}
 	else
@@ -141,14 +161,10 @@ int main(int argc, char* argv[])
 		MPI_Send(rankResultVector, rowAmount, MPI_INT, 0, rank, MPI_COMM_WORLD);
 	}
 
-	if (residue > 0)
-
-		MPI_Barrier(MPI_COMM_WORLD);
-
 	if (rank == 0)
 	{
 		t2 = MPI_Wtime();
-		if (matrixSize <= 100)
+		if (matrixSize <= 20)
 		{
 			cout << "\nResult vector:\n";
 			for (int i = 0; i < matrixSize; i++)
