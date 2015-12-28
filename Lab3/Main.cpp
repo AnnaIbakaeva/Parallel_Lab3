@@ -51,13 +51,14 @@ int main(int argc, char* argv[])
 	}
 	MPI_Bcast(&matrixSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	int **A = initMatrix(matrixSize);
+	int **A;
 	int * vector = new int[matrixSize];
 	int * resultVector = new int[matrixSize];
 
 	if (rank == 0)
 	{
 		srand(time(NULL));
+		A = initMatrix(matrixSize);
 		A = fillInMatrix(A, matrixSize);
 		vector = fillVector(vector, matrixSize);
 		if (matrixSize <= 20)
@@ -118,7 +119,7 @@ int main(int argc, char* argv[])
 			if (amount > rowAmount)
 				r++;
 		}
-
+		r = 0;
 		for (int m = 1; m < size; m++)
 		{
 			int amount = rowAmount;
@@ -135,6 +136,8 @@ int main(int argc, char* argv[])
 			{
 				resultVector[m*rowAmount + j + r] = resultElems[j];
 			}
+			if (amount > rowAmount)
+				r++;
 		}
 	}
 	else
